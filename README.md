@@ -10,4 +10,4 @@ Ktorとクリーンアーキテクチャでアプリケーションを実装す�
 ./gradlew run
 ```
 
-![結果](https://raw.github.com/wiki/UramnOIL/ktorca/images/result.png)
+![結果](https://raw.githubusercontent.com/UramnOIL/ktorca/main/images/result.png)
