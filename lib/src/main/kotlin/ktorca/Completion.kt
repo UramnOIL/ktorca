@@ -12,12 +12,15 @@ typealias CompletionHandler = suspend () -> Unit
 suspend fun <TSubject : Any, TContext : Any> PipelineContext<TSubject, TContext>.completable(block: suspend (CompletionHandler) -> Unit) {
 
     // Presenterの処理が終了したかどうかを監視するチャネル
-    val observer = Channel<Unit>()
+    val observer = Channel<Unit>(0)
     coroutineContext.job.invokeOnCompletion {
         observer.close(it)
     }
 
-    block { observer.send(Unit) }
+    block {
+        observer.send(Unit)
+        observer.close()
+    }
 
     // Presenterの完了を待機
     observer.receive()
