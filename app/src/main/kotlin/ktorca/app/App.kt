@@ -3,12 +3,13 @@
  */
 package ktorca.app
 
+import ktorca.*
+
 import io.ktor.server.application.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.*
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.SendChannel
+import ktorca.CompletionHandler
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 
@@ -20,22 +21,15 @@ fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 fun Application.router() {
     routing {
         get("/") {
-            // Presenterの処理が終了したかどうかを監視するチャネル
-            val observer = Channel<Unit>()
-            coroutineContext.job.invokeOnCompletion {
-                observer.close(it)
+            completable {
+                // Controller・UseCaseInteractor・Presenterを生成
+                val presenter   = IncrementCountPresenter(call, it, coroutineContext)
+                val usecase     = IncrementCountUseCaseInteractor(presenter, coroutineContext)
+                val controller  = HogeController(usecase)
+
+                // Controllerの処理を実行
+                controller.doHoge()
             }
-
-            // Controller・UseCaseInteractor・Presenterを生成
-            val presenter   = IncrementCountPresenter(call, observer, coroutineContext)
-            val usecase     = IncrementCountUseCaseInteractor(presenter, coroutineContext)
-            val controller  = HogeController(usecase)
-
-            // Controllerの処理を実行
-            controller.doHoge()
-
-            // Presenterの完了を待機
-            observer.receive()
         }
     }
 }
@@ -76,7 +70,7 @@ interface IncrementCountOutputBoundary {
 /**
  * ユースケース実装クラス
  */
-class IncrementCountUseCaseInteractor(private val output: IncrementCountOutputBoundary, context: CoroutineContext): IncrementCountInputBoundary, CoroutineScope by CoroutineScope(context) {
+class IncrementCountUseCaseInteractor(private val output: IncrementCountOutputBoundary, context: CoroutineContext) : IncrementCountInputBoundary, CoroutineScope by CoroutineScope(context) {
 
     companion object {
         /** アクセスカウンタ */
@@ -104,7 +98,7 @@ class IncrementCountUseCaseInteractor(private val output: IncrementCountOutputBo
 /**
  * Presenter
  */
-class IncrementCountPresenter(private val call: ApplicationCall, private val sendChannel: SendChannel<Unit>, context: CoroutineContext): IncrementCountOutputBoundary, CoroutineScope by CoroutineScope(context) {
+class IncrementCountPresenter(private val call: ApplicationCall, private val onComplete: CompletionHandler, context: CoroutineContext) : IncrementCountOutputBoundary, CoroutineScope by CoroutineScope(context) {
     /**
      * 現在のアクセスカウントを返却する
      */
@@ -113,7 +107,7 @@ class IncrementCountPresenter(private val call: ApplicationCall, private val sen
             call.respondText { "count: $count" }
 
             // 完了通知
-            sendChannel.send(Unit)
+            onComplete()
         }
     }
 }

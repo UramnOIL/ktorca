@@ -7,3 +7,7 @@
 plugins {
     id("ktorca.kotlin-library-conventions")
 }
+
+dependencies {
+    compileOnly(libs.ktor.server.core)
+}

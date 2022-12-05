@@ -9,4 +9,4 @@
  */
 
 rootProject.name = "ktorca"
-include("app", "list", "utilities")
+include("app", "lib")

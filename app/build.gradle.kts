@@ -13,17 +13,14 @@ repositories {
 }
 
 dependencies {
-    implementation("org.apache.commons:commons-text")
-    implementation(project(":utilities"))
+    implementation(project(":lib"))
 
-    // https://mvnrepository.com/artifact/org.jetbrains.kotlinx/kotlinx-coroutines-core
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation(libs.kotlinx.coroutines.core)
 
+    implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.netty)
 
-    implementation("io.ktor:ktor-server-core:2.1.3")
-    implementation("io.ktor:ktor-server-netty:2.1.3")
-
-    implementation("ch.qos.logback:logback-classic:1.4.5")
+    implementation(libs.logback.classic)
 }
 
 application {
